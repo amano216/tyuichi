@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>世界の首都クイズ - アフリカ・西アジア編</title>
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --primary-gradient-end: #764ba2;
+            --success-color: #4ade80;
+            --error-color: #f87171;
+            --bg-white: rgba(255, 255, 255, 0.95);
+            --text-primary: #333;
+            --text-secondary: #666;
+            --hover-bg: #e8e8e8;
+            --option-bg: #f5f5f5;
+            --border-radius: 12px;
+            --transition-speed: 0.3s;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-gradient-end) 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-primary);
+        }
+
+        .quiz-container {
+            background: var(--bg-white);
+            border-radius: 20px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .quiz-title {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+            font-size: 1.8rem;
+        }
+
+        .progress-container {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--primary-gradient-end));
+            border-radius: 10px;
+            transition: width var(--transition-speed) ease;
+            width: 0%;
+        }
+
+        .question-section {
+            margin-bottom: 2rem;
+        }
+
+        .question-counter {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .question-text {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .options-container {
+            display: grid;
+            gap: 0.8rem;
+        }
+
+        .option-button {
+            background: var(--option-bg);
+            border: 2px solid transparent;
+            border-radius: var(--border-radius);
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            transition: all var(--transition-speed) ease;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            text-align: left;
+        }
+
+        .option-button:hover:not(.disabled) {
+            background: var(--hover-bg);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .option-button.selected {
+            border-color: var(--primary-color);
+            background: #f0f4ff;
+        }
+
+        .option-button.correct {
+            border-color: var(--success-color);
+            background: #e6ffed;
+            animation: correctAnswer 0.5s ease;
+        }
+
+        .option-button.incorrect {
+            border-color: var(--error-color);
+            background: #ffeded;
+            animation: wrongAnswer 0.5s ease;
+        }
+
+        .option-button.disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        .option-text {
+            display: flex;
+            align-items: center;
+        }
+
+        .option-label {
+            font-weight: 600;
+            margin-right: 0.5rem;
+            color: var(--primary-color);
+        }
+
+        .feedback-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+        }
+
+        .feedback-icon.visible {
+            display: flex;
+        }
+
+        .feedback-icon.correct {
+            background: var(--success-color);
+        }
+
+        .feedback-icon.incorrect {
+            background: var(--error-color);
+        }
+
+        .answer-explanation {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: #f0f4ff;
+            border-radius: var(--border-radius);
+            border-left: 4px solid var(--primary-color);
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .answer-explanation.visible {
+            display: block;
+        }
+
+        .answer-explanation h3 {
+            margin: 0 0 0.5rem 0;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+
+        .answer-explanation p {
+            margin: 0;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .action-button {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-gradient-end));
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            flex: 1;
+            transition: all var(--transition-speed) ease;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .action-button.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        #skipButton {
+            background: linear-gradient(135deg, #94a3b8, #64748b);
+        }
+
+        #prevButton {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+        }
+
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .result-container {
+            text-align: center;
+            display: none;
+        }
+
+        .final-score {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 1rem 0;
+        }
+
+        .result-feedback {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        @keyframes correctAnswer {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes wrongAnswer {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 480px) {
+            .quiz-container {
+                padding: 1.5rem;
+            }
+            .quiz-title {
+                font-size: 1.5rem;
+            }
+            .question-text {
+                font-size: 1.1rem;
+            }
+            .option-button {
+                font-size: 1rem;
+                padding: 0.8rem 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <h1 class="quiz-title">世界の首都クイズ 🌍</h1>
+        
+        <div class="quiz-view">
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            
+            <div class="question-section">
+                <div class="question-counter">
+                    問題 <span id="currentQuestionNumber">1</span> / <span id="totalQuestions">20</span>
+                </div>
+                <div class="question-text" id="questionText"></div>
+                
+                <div class="options-container" id="optionsContainer"></div>
+                
+                <div class="answer-explanation" id="answerExplanation"></div>
+            </div>
+            
+            <div class="button-container">
+                <button class="action-button" id="prevButton" onclick="quizController.prevQuestion()">前へ</button>
+                <button class="action-button" id="skipButton" onclick="quizController.skipQuestion()">スキップ</button>
+                <button class="action-button" id="nextButton" onclick="quizController.nextQuestion()">次へ</button>
+            </div>
+        </div>
+        
+        <div class="result-container" id="resultView">
+            <h2>クイズ完了！</h2>
+            <div class="final-score">
+                <span id="scoreNumber">0</span> / <span id="totalNumber">20</span>
+            </div>
+            <div class="result-feedback" id="resultFeedback"></div>
+            <button class="action-button visible" onclick="quizController.restart()">もう一度挑戦</button>
+        </div>
+    </div>
+
+    <script>
+        // 問題データの管理
+        const questionBank = {
+            africaWestAsia: [
+                // 北・西アフリカ
+                { country: "エジプト", capital: "カイロ", options: ["カイロ", "アレクサンドリア", "ルクソール", "アスワン"], explanation: "カイロはエジプトの首都で、人口約1000万人の大都市です。ピラミッドで有名なギザもカイロ都市圏に含まれます。" },
+                { country: "リビア", capital: "トリポリ", options: ["トリポリ", "ベンガジ", "ミスラタ", "トブルク"], explanation: "トリポリは地中海に面したリビアの首都です。古代ローマ時代から重要な港湾都市でした。" },
+                { country: "アルジェリア", capital: "アルジェ", options: ["アルジェ", "オラン", "コンスタンティーヌ", "アンナバ"], explanation: "アルジェはアルジェリアの首都で、地中海に面した美しい白い建物が特徴的な都市です。" },
+                { country: "モロッコ", capital: "ラバト", options: ["ラバト", "カサブランカ", "マラケシュ", "フェズ"], explanation: "ラバトはモロッコの首都です。カサブランカの方が有名ですが、政治の中心はラバトにあります。" },
+                { country: "セネガル", capital: "ダカール", options: ["ダカール", "ティエス", "サンルイ", "ジガンショール"] },
+                { country: "リベリア", capital: "モンロビア", options: ["モンロビア", "ハーパー", "ブキャナン", "グバンガ"] },
+                { country: "コートジボワール", capital: "ヤムスクロ", options: ["ヤムスクロ", "アビジャン", "ブアケ", "ダロア"] },
+                { country: "ガーナ", capital: "アクラ", options: ["アクラ", "クマシ", "タマレ", "セコンディ"] },
+                { country: "ナイジェリア", capital: "アブジャ", options: ["アブジャ", "ラゴス", "カノ", "イバダン"] },
+                { country: "スーダン", capital: "ハルツーム", options: ["ハルツーム", "オムドゥルマン", "ポートスーダン", "カッサラ"] },
+                { country: "南スーダン", capital: "ジュバ", options: ["ジュバ", "ワウ", "マラカル", "ボル"] },
+                
+                // 東・南アフリカ
+                { country: "エチオピア", capital: "アディスアベバ", options: ["アディスアベバ", "ディレダワ", "メケレ", "ゴンダール"] },
+                { country: "ソマリア", capital: "モガディシュ", options: ["モガディシュ", "ハルゲイサ", "キスマヨ", "ボサソ"] },
+                { country: "ケニア", capital: "ナイロビ", options: ["ナイロビ", "モンバサ", "キスム", "ナクル"] },
+                { country: "タンザニア", capital: "ダルエスサラーム", options: ["ダルエスサラーム", "ドドマ", "アルーシャ", "ムワンザ"] },
+                { country: "コンゴ民主共和国", capital: "キンシャサ", options: ["キンシャサ", "ルブンバシ", "ゴマ", "キサンガニ"] },
+                { country: "ウガンダ", capital: "カンパラ", options: ["カンパラ", "グル", "ジンジャ", "ムバレ"] },
+                { country: "ザンビア", capital: "ルサカ", options: ["ルサカ", "キトウェ", "ンドラ", "カブウェ"] },
+                { country: "モザンビーク", capital: "マプト", options: ["マプト", "ベイラ", "ナンプラ", "テテ"] },
+                { country: "マダガスカル", capital: "アンタナナリボ", options: ["アンタナナリボ", "トアマシナ", "アンツィラナナ", "フィアナランツォア"] },
+                { country: "南アフリカ共和国", capital: "プレトリア", options: ["プレトリア", "ケープタウン", "ヨハネスブルグ", "ダーバン"] },
+                
+                // 西アジア
+                { country: "トルコ", capital: "アンカラ", options: ["アンカラ", "イスタンブール", "イズミル", "ブルサ"] },
+                { country: "シリア", capital: "ダマスカス", options: ["ダマスカス", "アレッポ", "ホムス", "ラタキア"] },
+                { country: "イスラエル", capital: "エルサレム", options: ["エルサレム", "テルアビブ", "ハイファ", "ベエルシェバ"] },
+                { country: "イラク", capital: "バグダッド", options: ["バグダッド", "バスラ", "モスル", "エルビル"] },
+                { country: "サウジアラビア", capital: "リヤド", options: ["リヤド", "ジッダ", "メッカ", "メディナ"] },
+                { country: "UAE（アラブ首長国連邦）", capital: "アブダビ", options: ["アブダビ", "ドバイ", "シャルジャ", "アジュマン"] },
+                { country: "イラン", capital: "テヘラン", options: ["テヘラン", "マシュハド", "イスファハン", "タブリーズ"], explanation: "テヘランはイランの首都で、人口約900万人の大都市です。エルブルズ山脈の南麓に位置しています。" },
+                { country: "オマーン", capital: "マスカット", options: ["マスカット", "サラーラ", "ニズワ", "スール"] }
+            ]
+        };
+
+        // ユーティリティ関数
+        const utils = {
+            shuffleArray: function(array) {
+                const newArray = [...array];
+                for (let i = newArray.length - 1; i > 0; i--) {
+                    const randomIndex = Math.floor(Math.random() * (i + 1));
+                    [newArray[i], newArray[randomIndex]] = [newArray[randomIndex], newArray[i]];
+                }
+                return newArray;
+            },
+
+            getScoreFeedback: function(score, total) {
+                const percentage = (score / total) * 100;
+                
+                if (percentage === 100) {
+                    return '完璧です！全問正解おめでとうございます！🎉';
+                } else if (percentage >= 80) {
+                    return '素晴らしい！よく頑張りました！🌟';
+                } else if (percentage >= 60) {
+                    return 'いい調子です！もう少しで完璧です！👍';
+                } else if (percentage >= 40) {
+                    return 'まだまだ伸びしろがあります！頑張って！💪';
+                } else {
+                    return 'もう一度チャレンジしてみましょう！📚';
+                }
+            }
+        };
+
+        // クイズロジックの管理
+        const quizController = {
+            currentQuestionIndex: 0,
+            score: 0,
+            questions: [],
+            hasAnswered: false,
+            userAnswers: [],
+
+            initialize: function() {
+                this.questions = utils.shuffleArray([...questionBank.africaWestAsia]);
+                this.currentQuestionIndex = 0;
+                this.score = 0;
+                this.userAnswers = [];
+                this.loadQuestion();
+                this.updateUI();
+            },
+
+            loadQuestion: function() {
+                const question = this.questions[this.currentQuestionIndex];
+                const shuffledOptions = utils.shuffleArray(question.options);
+                
+                // 質問文を更新
+                document.getElementById('questionText').textContent = 
+                    `「${question.country}」の首都はどこですか？`;
+                
+                // 選択肢を生成
+                const optionsContainer = document.getElementById('optionsContainer');
+                optionsContainer.innerHTML = '';
+                
+                shuffledOptions.forEach((option, index) => {
+                    const optionButton = this.createOptionElement(option, index, question.capital);
+                    optionsContainer.appendChild(optionButton);
+                });
+                
+                // UIをリセット
+                this.hasAnswered = false;
+                document.getElementById('nextButton').classList.remove('visible');
+                document.getElementById('skipButton').classList.add('visible');
+                document.getElementById('prevButton').classList.toggle('visible', this.currentQuestionIndex > 0);
+                document.getElementById('answerExplanation').classList.remove('visible');
+                document.getElementById('answerExplanation').innerHTML = '';
+                this.updateProgressBar();
+                
+                // 以前の回答を復元
+                if (this.userAnswers[this.currentQuestionIndex]) {
+                    this.restorePreviousAnswer();
+                }
+            },
+
+            createOptionElement: function(option, index, correctAnswer) {
+                const button = document.createElement('button');
+                button.className = 'option-button';
+                button.onclick = () => this.selectOption(button, option);
+                
+                const optionText = document.createElement('div');
+                optionText.className = 'option-text';
+                optionText.innerHTML = `
+                    <span class="option-label">${String.fromCharCode(65 + index)}.</span>
+                    <span>${option}</span>
+                `;
+                
+                const feedbackIcon = document.createElement('div');
+                feedbackIcon.className = 'feedback-icon';
+                feedbackIcon.innerHTML = option === correctAnswer ? '✓' : '✗';
+                
+                button.appendChild(optionText);
+                button.appendChild(feedbackIcon);
+                
+                return button;
+            },
+
+            selectOption: function(element, selectedAnswer) {
+                if (this.hasAnswered) return;
+                
+                // 選択状態を更新
+                document.querySelectorAll('.option-button').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+                element.classList.add('selected');
+                
+                // 答え合わせ
+                this.checkAnswer(selectedAnswer);
+            },
+
+            checkAnswer: function(selectedAnswer) {
+                this.hasAnswered = true;
+                const currentQuestion = this.questions[this.currentQuestionIndex];
+                const isCorrect = selectedAnswer === currentQuestion.capital;
+                
+                // 回答を保存
+                this.userAnswers[this.currentQuestionIndex] = {
+                    answer: selectedAnswer,
+                    isCorrect: isCorrect,
+                    wasSkipped: false
+                };
+                
+                if (isCorrect && !this.userAnswers[this.currentQuestionIndex].counted) {
+                    this.score++;
+                    this.userAnswers[this.currentQuestionIndex].counted = true;
+                }
+                
+                // 全ての選択肢を無効化し、結果を表示
+                document.querySelectorAll('.option-button').forEach(button => {
+                    button.classList.add('disabled');
+                    const optionText = button.querySelector('span:not(.option-label)').textContent;
+                    const icon = button.querySelector('.feedback-icon');
+                    
+                    if (optionText === currentQuestion.capital) {
+                        button.classList.add('correct');
+                        icon.classList.add('correct', 'visible');
+                    } else if (button.classList.contains('selected')) {
+                        button.classList.add('incorrect');
+                        icon.classList.add('incorrect', 'visible');
+                    }
+                });
+                
+                // 解説を表示
+                this.showExplanation();
+                
+                // 次へボタンを表示、スキップボタンを非表示
+                document.getElementById('nextButton').classList.add('visible');
+                document.getElementById('skipButton').classList.remove('visible');
+            },
+
+            nextQuestion: function() {
+                this.currentQuestionIndex++;
+                
+                if (this.currentQuestionIndex < this.questions.length) {
+                    this.loadQuestion();
+                    this.updateUI();
+                } else {
+                    this.showResult();
+                }
+            },
+
+            skipQuestion: function() {
+                // スキップした場合は正解を表示
+                const currentQuestion = this.questions[this.currentQuestionIndex];
+                
+                // 回答を保存
+                this.userAnswers[this.currentQuestionIndex] = {
+                    answer: null,
+                    isCorrect: false,
+                    wasSkipped: true
+                };
+                
+                // 全ての選択肢を無効化し、正解を表示
+                document.querySelectorAll('.option-button').forEach(button => {
+                    button.classList.add('disabled');
+                    const optionText = button.querySelector('span:not(.option-label)').textContent;
+                    const icon = button.querySelector('.feedback-icon');
+                    
+                    if (optionText === currentQuestion.capital) {
+                        button.classList.add('correct');
+                        icon.classList.add('correct', 'visible');
+                    }
+                });
+                
+                // 解説を表示
+                this.showExplanation();
+                
+                // 次へボタンを表示、スキップボタンを非表示
+                document.getElementById('nextButton').classList.add('visible');
+                document.getElementById('skipButton').classList.remove('visible');
+                this.hasAnswered = true;
+            },
+
+            prevQuestion: function() {
+                if (this.currentQuestionIndex > 0) {
+                    this.currentQuestionIndex--;
+                    this.loadQuestion();
+                    this.updateUI();
+                }
+            },
+
+            showExplanation: function() {
+                const currentQuestion = this.questions[this.currentQuestionIndex];
+                const explanation = currentQuestion.explanation || `${currentQuestion.capital}は${currentQuestion.country}の首都です。`;
+                
+                const explanationEl = document.getElementById('answerExplanation');
+                explanationEl.innerHTML = `
+                    <h3>解説</h3>
+                    <p>${explanation}</p>
+                `;
+                explanationEl.classList.add('visible');
+            },
+
+            restorePreviousAnswer: function() {
+                const answer = this.userAnswers[this.currentQuestionIndex];
+                const currentQuestion = this.questions[this.currentQuestionIndex];
+                
+                // 選択肢を無効化し、前の回答状態を復元
+                document.querySelectorAll('.option-button').forEach(button => {
+                    button.classList.add('disabled');
+                    const optionText = button.querySelector('span:not(.option-label)').textContent;
+                    const icon = button.querySelector('.feedback-icon');
+                    
+                    if (optionText === currentQuestion.capital) {
+                        button.classList.add('correct');
+                        icon.classList.add('correct', 'visible');
+                    } else if (answer.answer === optionText) {
+                        button.classList.add('selected', 'incorrect');
+                        icon.classList.add('incorrect', 'visible');
+                    }
+                });
+                
+                // 解説を表示
+                this.showExplanation();
+                
+                // ボタンの状態を設定
+                document.getElementById('nextButton').classList.add('visible');
+                document.getElementById('skipButton').classList.remove('visible');
+                this.hasAnswered = true;
+            },
+
+            updateUI: function() {
+                document.getElementById('currentQuestionNumber').textContent = 
+                    this.currentQuestionIndex + 1;
+                document.getElementById('totalQuestions').textContent = 
+                    this.questions.length;
+            },
+
+            updateProgressBar: function() {
+                const progress = ((this.currentQuestionIndex + 1) / this.questions.length) * 100;
+                document.getElementById('progressBar').style.width = progress + '%';
+            },
+
+            showResult: function() {
+                document.querySelector('.quiz-view').style.display = 'none';
+                document.getElementById('resultView').style.display = 'block';
+                
+                document.getElementById('scoreNumber').textContent = this.score;
+                document.getElementById('totalNumber').textContent = this.questions.length;
+                document.getElementById('resultFeedback').textContent = 
+                    utils.getScoreFeedback(this.score, this.questions.length);
+            },
+
+            restart: function() {
+                document.querySelector('.quiz-view').style.display = 'block';
+                document.getElementById('resultView').style.display = 'none';
+                this.initialize();
+            }
+        };
+
+        // アプリケーションの開始
+        document.addEventListener('DOMContentLoaded', function() {
+            quizController.initialize();
+        });
+    </script>
+</body>
+</html>
